@@ -1,7 +1,7 @@
 # QLab-Scripts
 Here you'll find all of the scripts I've written for various equipment, problems, workflow solutions, etc. that I've encountered while using QLab and working on shows.
 Feel free to make any changes, modify things how they fit, ask questions, or post issues if you're having trouble getting things running on your system! I'll do my best to help you get it working for you!
-I'll have a QLab workspace as well that I'll keep regularly updated with the cues already built, as well as some other toys/tricks/solutions I use natively!
+The QLab workspace in the main directory contains all of the cues already built and ready to go. I'll keep regularly updated with the cues I've written as well as some other toys/tricks/solutions that I use!
 
 In each folder you'll find a README file with a description of what each cue does, along with a downloadable applescript file with the code needed for each cue, and a plain text version you can copy and paste in case you don't have the option to download the script directly!
 
