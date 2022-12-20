@@ -1,0 +1,60 @@
+--This cue was created by Johnny Bartlett! If you are having any issues with it, please let me know over at https://github.com/Guffawker/QLab-Scripts and I'll do my best to help resolve the issues! You can also find my other scripts there or donate over at https://www.buymeacoffee.com/guffawker to support me!
+tell application id "com.figure53.QLab.4"
+	--Ensures Live Fade Preview is enabled so changes can be heard as fades are adjusted
+	set live fade preview of preferences to true
+end tell
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	--Stores the information about the cue being played to refernce
+	set currentSong to last item of (selected as list)
+	set startingLevel to getLevel of currentSong row 0 column 0
+	set currentLevel to {}
+	
+	--Creates a timeline cue to put all of the created fades in to
+	make type "Group"
+	set newGroup to last item of (selected as list)
+	set mode of newGroup to timeline
+	tell current cue list
+		move cue id (uniqueID of currentSong) of parent of currentSong to newGroup
+		set playback position to currentSong
+	end tell
+	--Creates a new fade cue that is used to control/create the other fades
+	make type "Fade"
+	set controlFade to last item of (selected as list)
+	set q name of controlFade to "Adjustment Fade"
+	set cue target of controlFade to currentSong
+	controlFade setLevel row 0 column 0 db startingLevel
+	
+	--Plays the selected cue
+	currentSong start
+	set lastLevel to startingLevel
+	--Checks to see if there are any adjustments to the Adjustment Fade cue while it's playing. If there are, creates a new fade cue with a prewait at set to fire the cue at the time the user adjusted the fade cue, and sets it's master level equal to the level the user set in the Adjustment Fade
+	repeat while currentSong is running
+		set currentLevel to getLevel of controlFade row 0 column 0
+		if currentLevel is not equal to lastLevel then
+			make type "Fade"
+			set currentFade to last item in (selected as list)
+			set cue target of currentFade to currentSong
+			set pre wait of currentFade to (((action elapsed) of currentSong) - 3)
+			currentFade setLevel row 0 column 0 db currentLevel
+			tell current cue list
+				set playback position to controlFade
+			end tell
+			set changing to true
+			repeat while changing is true
+				set currentLevel to getLevel of controlFade row 0 column 0
+				currentFade setLevel row 0 column 0 db currentLevel
+				if currentLevel is not equal to lastLevel then
+					set lastLevel to currentLevel
+					delay 0.2
+				else
+					set changing to false
+				end if
+			end repeat
+		end if
+	end repeat
+	--Cleans up by deleting the Adjustment Fade cue
+	tell current cue list
+		delete cue id (uniqueID of controlFade) of parent of controlFade
+	end tell
+end tell
