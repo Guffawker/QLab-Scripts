@@ -1,3 +1,4 @@
+#ETC SCRIPTS
 ETC CUE SYNC
 		Queries an ETC lighting console using OSC to get a count of the number of cues in a list, then requests the cue number of each one from the console. Uses the data queried to create a network cue in QLab for each cue returned, with the correct osc string /eos/cue/X/fire to trigger the cue from QLab.
 		Requires OSC over UDP setup on your ETC lighting console.
