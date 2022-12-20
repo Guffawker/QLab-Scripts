@@ -1,0 +1,118 @@
+--This cue was created by Johnny Bartlett! If you are having any issues with it, please let me know over at https://github.com/Guffawker/QLab-Scripts and I'll do my best to help resolve the issues! You can also find my other scripts there or donate over at https://www.buymeacoffee.com/guffawker to support me!
+tell application id "com.figure53.QLab.4" to tell front workspace
+	--Variables used to track the cues created and data through the script
+	set saveData to {}
+	my getSavedInfo(saveData)
+	set infoNeeded to item 1 of saveData
+	set serverIP to item 2 of saveData
+	set runInQLab to item 3 of saveData
+	set brewDirectory to item 4 of saveData
+	set dependenciesInstalled to item 5 of saveData
+	set tcpServerPort to item 6 of saveData
+	--Prompts the user for information to create the TCP connection
+	if infoNeeded is true then
+		set serverIP to display dialog "Server IP Address:" default answer serverIP
+		set serverIP to text returned of serverIP
+		set runInQLabCheck to display alert "Would you like to run this proccess in QLab? Running it in QLab will allow you to terminate the active connection and see it running as you would any other cue however it may affect performance and cause slowdowns. Running it externally means the connection will be maintained even if you panic or stop all cues however you will have to stop it manually in the terminal window that opens." buttons {"No", "Yes"}
+		set runInQLab to button returned of runInQLabCheck
+		set tcpServerPort to display dialog "TCP Server Port:" default answer tcpServerPort
+		set tcpServerPort to text returned of tcpServerPort
+		
+		--A one time prompt for the user to install the necessary dependencies required to run the script.
+		if dependenciesInstalled is false then
+			set dependenciesInstalledCheck to display alert "PLEASE ENSURE YOU HAVE DONE YOUR DUE DILIGENCE TO MAKE SURE THIS SCRIPT HASN'T BEN ALTERED TO INSTALL ANYTHING MALICIOUS ON YOUR COMPUTER! ONLY THE LISTED DEPENDENCIES SHOULD INSTALL, AND THE TERMINAL WINDOW WILL SPELL OUT WHAT IT IS INSTALLING AT EACH STEP!" & return & "Would you like to install any necessary dependencies before running the script. These include the following: " & return & "socat" & return & "A terminal will launch to install each of the dependencies required. The first one (homebrew) will require an administrative password. If you already have it installed, you can simply press Ctrl + C to terminate the install and move on to the next ones. Follow any prompts by the terminal to ensure the install of each dependency!" & return & "This will be the only time this prompt is show. If you need to install dependencies later, change the color tag of this cue to none to be repormpted." buttons {"No", "Yes"}
+			set installchoice to button returned of dependenciesInstalledCheck
+			if installchoice is equal to "Yes" then
+				my installDependencies(brewDirectory)
+			end if
+			set q color of cue "TCPCON" to "Purple"
+			--Begs for money. I know, it's annoying, but I'm broke and making these tools takes times. It'll only prompt when you install dependencies.
+			set donatePrompt to display alert "This script was created by Johhny Bartlett. To see more of my work, donate to allow me to create more scripts like this, or commission a script for your space or show visit https://www.johnnybartlett.art or click the Donate button below to support me direct! (This prompt will only ever show up while installing dependencies. If you reset the cue you will see it again, but don't worry it won't be a forced pop-up every time you run this script!)" buttons {"Thanks!", "Donate"}
+			set response to button returned of the donatePrompt
+			if response is "Donate" then open location "https://www.buymeacoffee.com/guffawker"
+		end if
+		
+		--Saves the inputed information to the cues notes to be referenced later
+		set notes of cue "TCPCON" to "This cue will create a TCP connection with an active TCP Server. Set the cue color of this cue to blue to ignore prompts and use the IP and port listed below." & return & "Server IP: " & serverIP & return & "Run the connection in QLab?: " & runInQLab & return & "TCP Server Port: " & tcpServerPort & return & "This script was created by Johhny Bartlett. To see more of my work, donate to allow me to create more scripts like this, or commission a script for your space or show visit https://www.johnnybartlett.art or visit https://www.buymeacoffee.com/guffawker to donate directly!"
+	end if
+	--Runs a socat shell command to create a TCP connection with the ETC board on port 3032 at the given IP and QLab on port 53000 of the localhost
+	if runInQLab is equal to "Yes" then
+		do shell script brewDirectory & "/socat tcp-connect:" & serverIP & ":" & tcpServerPort & ",reuseaddr tcp-connect:127.0.0.1:53000"
+	else
+		--Creates the same connection, but launches a terminal window to do so
+		tell application "Terminal"
+			activate
+			do script brewDirectory & "/socat tcp-connect:" & serverIP & ":" & tcpServerPort & ",reuseaddr tcp-connect:127.0.0.1:53000"
+		end tell
+	end if
+end tell
+--Function to pull data stored in the cue notes between uses
+on getSavedInfo(saveData)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set thisCue to last item of (active cues as list)
+		--Configures the cue for the initial setup by checking if it has been named yet
+		if q number of thisCue is not equal to "TCPCON" then
+			set q number of thisCue to "TCPCON"
+			set q name of thisCue to "TCP Connection"
+			set q color of cue "TCPCON" to "None"
+		end if
+		
+		--Checks to see the number of lines in the notes section to see if there is data to pull.
+		if q color of cue "TCPCON" is not equal to "Blue" then
+			set infoNeeded to true
+		else
+			set infoNeeded to false
+		end if
+		set AppleScript's text item delimiters to ": "
+		set cueNotes to notes of cue "TCPCON"
+		set savedInfo to count of paragraphs of cueNotes
+		if savedInfo is less than 5 then
+			set serverIP to ""
+			set runInQLab to ""
+			set infoNeeded to true
+			set tcpServerPort to ""
+		else
+			set serverIP to text item 2 of (paragraph 2 of cueNotes)
+			set runInQLab to text item 2 of (paragraph 3 of cueNotes)
+			set tcpServerPort to text item 2 of (paragraph 4 of cueNotes)
+			
+		end if
+		set AppleScript's text item delimiters to " "
+		set chip to (do shell script "sysctl -n machdep.cpu.brand_string")
+		if text item 1 of chip is "Apple" then
+			set brewDirectory to "/opt/homebrew/bin/"
+		else
+			set brewDirectory to "/usr/local/bin"
+		end if
+		if q color of cue "TCPCON" is equal to "Purple" or q color of cue "TCPCON" is equal to "Blue" then
+			set dependenciesInstalled to true
+		else
+			set dependenciesInstalled to false
+		end if
+		copy infoNeeded to end of saveData
+		copy serverIP to end of saveData
+		copy runInQLab to end of saveData
+		copy brewDirectory to end of saveData
+		copy dependenciesInstalled to end of saveData
+		copy tcpServerPort to end of saveData
+	end tell
+	return saveData
+end getSavedInfo
+
+--Function to install the necessary dependencies to run the script
+on installDependencies(brewDirectory)
+	tell application "Terminal"
+		activate
+		set installs to do script "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+		repeat
+			delay 0.1
+			if not busy of installs then exit repeat
+		end repeat
+		do script brewDirectory & "/brew install socat" in installs
+		repeat
+			delay 0.1
+			if not busy of installs then exit repeat
+		end repeat
+		quit
+	end tell
+end installDependencies
