@@ -7,3 +7,4 @@
 		-Will automatically attempt to reestablish the TCP connection if it is ever interupted.
 	-ETCTCPCON (Non-Flagged)
 		-Provides the same functionality of the Flagged version, but does not have the option to attenmpt to reestablish the connection if the cue is flagged. There is no performance difference between the two, but I wanted to provide the option in case there are security concerns or anything with it attempting to reconnect automatically!
+    
