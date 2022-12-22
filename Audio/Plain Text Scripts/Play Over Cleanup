@@ -1,0 +1,10 @@
+--This cue was created by Johnny Bartlett! If you are having any issues with it, please let me know over at https://github.com/Guffawker/QLab-Scripts and I'll do my best to help resolve the issues! You can also find my other scripts there or donate over at https://www.buymeacoffee.com/guffawker to support me!
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set activeCues to every cue whose q name is "TEMP CUE"
+	repeat with eachcue in activeCues
+		set cueID to uniqueID of eachcue
+		repeat while eachcue is running
+		end repeat
+		delete cue id cueID of parent of eachcue
+	end repeat
+end tell
