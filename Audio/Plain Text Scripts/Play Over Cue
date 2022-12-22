@@ -1,0 +1,58 @@
+--This cue was created by Johnny Bartlett! If you are having any issues with it, please let me know over at https://github.com/Guffawker/QLab-Scripts and I'll do my best to help resolve the issues! You can also find my other scripts there or donate over at https://www.buymeacoffee.com/guffawker to support me!
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set thisCue to last item of (active cues as list)
+	if q color of thisCue is not "Purple" then
+		my setNotes(thisCue)
+	end if
+	--Sets variables to be used through the script
+	set activeCues to (active cues as list)
+	set AppleScript's text item delimiters to ": "
+	set targetCue to text item 2 of (q name of cue "PLAYOVER" as string)
+	set targetCue to cue targetCue
+	
+	--Starts the original instance of the cue if it's not playing
+	start targetCue
+	repeat with playingCues in activeCues
+		--If the cue is already playing, creates a new cue targeting the same audio file, sets the levels equal to the original, and gives it the name "TEMP CUE" to be referenced for cleanup.
+		if q name of playingCues is equal to q name of targetCue then
+			--Saves the current position of the selected cue so it can jump back in place.
+			try
+				set positionMemory to last item of (selected as list)
+			end try
+			set selected to targetCue
+			make type "Audio"
+			set newCue to last item of (selected as list)
+			newCue setLevel row 0 column 0 db (targetCue getLevel row 0 column 0)
+			set file target of newCue to file target of targetCue
+			set q name of newCue to "TEMP CUE"
+			set patch of newCue to patch of targetCue
+			set end time of newCue to end time of targetCue
+			--Starts the new cue created, and resets the cleanup script to ensure it's referencing all newly created cues.
+			start newCue
+			reset cue "PLAYOVERCLEAN"
+			start cue "PLAYOVERCLEAN"
+		end if
+		--Trys to reset the seleciton back to where it was before creating new cues
+		try
+			set selected to positionMemory
+		end try
+	end repeat
+end tell
+
+on setNotes(thisCue)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set q number of thisCue to "PLAYOVER"
+		set q name of thisCue to "Play Over Cue: XX"
+		set notes of cue "PLAYOVER" to "This script is used in conjunction with the Play Over Cleanup script in order to allow multiple instances of an audio file to be played on top of eachother without other workarounds needed. It does this by creating a new audio cue that references the same audio file as the referenced cue, runs the created cue, then deletes any created cues after they finish running. To use it, simply change the XX in the cue name to match the Number of your target cue, and fire the cue." & return & return & "This script was created by Johhny Bartlett. To see more of my work, donate to allow me to create more scripts like this, or commission a script for your space or show visit https://www.johnnybartlett.art or visit https://www.buymeacoffee.com/guffawker to donate directly!"
+		set q color of thisCue to "Purple"
+		set selected to thisCue
+		moveSelectionDown
+		set thatCue to last item of (selected as list)
+		if q color of thatCue is not "Purple" then
+			set q number of thatCue to "PLAYOVERCLEAN"
+			set q name of thatCue to "Play Over Cleanup"
+			set notes of thatCue to "This script is used in conjunction with the Play Over Cue script in order to allow multiple instances of an audio file to be played on top of eachother without other workarounds needed. It does this by creating a new audio cue that references the same audio file as the referenced cue, runs the created cue, then deletes any created cues after they finish running." & return & "To use this script, set the cue Number of this cue to PLAYOVERSCRIPT" & return & return & "This script was created by Johhny Bartlett. To see more of my work, donate to allow me to create more scripts like this, or commission a script for your space or show visit https://www.johnnybartlett.art or visit https://www.buymeacoffee.com/guffawker to donate directly!"
+			set q color of thatCue to "Purple"
+		end if
+	end tell
+end setNotes
